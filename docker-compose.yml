@@ -1,0 +1,91 @@
+version: '3'
+
+services:
+  node-app:
+    build: .
+    image: node-app
+    environment:
+      # - MONGODB_URL=mongodb://mongodb:27017/EcommerceBE
+      - MONGODB_URL=mongodb+srv://workdvt811212:WMg7gLCvPsZ6tLkR@cluster0.vgroum7.mongodb.net/EcommerceBE
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/node-app
+    networks:
+      - node-network
+
+  # mongodb:
+  #   image: mongo:4.2.1-bionic
+  #   ports:
+  #     - '27017:27017'
+  #   volumes:
+  #     - dbdata:/data/db
+  #   networks:
+  #     - node-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+    healthcheck:
+      test: 'curl http://elasticsearch:9200/_cluster/health'
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=datasearch
+      - bootstrap.memory_lock=true
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+      - cluster.initial_master_nodes=elasticsearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
+    networks:
+      - node-network
+    volumes:
+      - elasticdata:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.0.1
+    ports:
+      - '5601:5601'
+    networks:
+      - node-network
+  redis:
+    image: 'bitnami/redis:latest'
+    container_name: redis
+    volumes:
+      - ./redisdata:/bitnami/redis/data
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_AOF_ENABLED=no
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - node-network
+
+  monstache:
+    environment:
+      # - MONSTACHE_MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_PORT}
+      #- MONSTACHE_MONGO_URL=mongodb+srv://johnsmith2001it:twFDF2QLX9uQ5fbt@cluster0.troet70.mongodb.net/
+      - MONSTACHE_MONGO_URL=mongodb+srv://johnsmith2001it:twFDF2QLX9uQ5fbt@cluster0.troet70.mongodb.net/
+    image: rwynn/monstache:latest
+    container_name: monstache
+    volumes:
+      - monstachedata:/monstache/
+    networks:
+      - node-network
+    depends_on:
+      - elasticsearch
+      # - mongodb
+
+volumes:
+  pipeline:
+  dbdata:
+  elasticdata:
+  redisdata:
+  monstachedata:
+
+networks:
+  node-network:
+    driver: bridge

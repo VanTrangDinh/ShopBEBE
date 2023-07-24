@@ -1,0 +1,12 @@
+{
+  "singleQuote": true,
+  "printWidth": 125,
+  "overrides": [
+    {
+      "files": "*.yml",
+      "options": {
+        "parser": "yaml"
+      }
+    }
+  ]
+}
